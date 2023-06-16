@@ -1,0 +1,5 @@
+module.exports = {
+    BAD_REQUEST: "BAD_REQUEST",
+    GENERATION_ERROR: "GENERATION_ERROR",
+    SUCCESS: "SUCCESS"
+};
