@@ -1,4 +1,4 @@
-service: jgs-magic
+service: magic-home
 useDotenv: true
 package:
   individually: true
@@ -18,6 +18,12 @@ provider:
     BASE_REPLICATE_URL: ${env:BASE_REPLICATE_URL}
     TOKEN_API_KEY: ${env:TOKEN_API_KEY}
     TTL_AI_MODEL_VERSION: ${env:TTI_AI_MODEL_VERSION}
+    FACE_AI_MODEL_VERSION: ${env:FACE_AI_MODEL_VERSION}
+    LLM_AI_MODEL_VERSION: ${env:LLM_AI_MODEL_VERSION}
+    OPEN_AI_KEY: ${env:OPEN_AI_KEY}
+    CONTROLNET_AI_MODEL_VERSION: ${env:CONTROLNET_AI_MODEL_VERSION}
+    STORY_AI_MODEL_VERSION: ${env:STORY_AI_MODEL_VERSION}
+    TTL_AI_DISNEY_MODEL_VERSION: ${env:TTL_AI_DISNEY_MODEL_VERSION}
   iamRoleStatements:
     - Effect: Allow
       Action:
@@ -42,7 +48,7 @@ custom:
   bucket: ${self:service}-${self:provider.stage}
   customDomain:
     domainName: dev-sdk.yagagames.com
-    basePath: ''
+    basePath: ""
     stage: ${self:provider.stage}
     createRoute53Record: true
   optimize:
@@ -58,7 +64,47 @@ functions:
           path: /api/upload-image
           method: post
           cors:
-            origin: '*'
+            origin: "*"
+            headers: ${self:custom.allowedHeaders}
+  generate-control:
+    handler: api/controlnet/generate_controlnet.handler
+    description: POST /api/controlnet/
+    events:
+      - http:
+          path: /api/controlnet
+          method: post
+          cors:
+            origin: "*"
+            headers: ${self:custom.allowedHeaders}
+  get-controlnet:
+    handler: api/controlnet/get_controlnet.handler
+    description: POST /api/controlnet/{id}
+    events:
+      - http:
+          path: /api/controlnet/{id}
+          method: get
+          cors:
+            origin: "*"
+            headers: ${self:custom.allowedHeaders}
+  generate-story:
+    handler: api/story/generate_story.handler
+    description: POST /api/story/
+    events:
+      - http:
+          path: /api/story
+          method: post
+          cors:
+            origin: "*"
+            headers: ${self:custom.allowedHeaders}
+  get-story:
+    handler: api/story/get_story.handler
+    description: POST /api/story/{id}
+    events:
+      - http:
+          path: /api/story/{id}
+          method: get
+          cors:
+            origin: "*"
             headers: ${self:custom.allowedHeaders}
   generate-tti:
     handler: api/tti/generate-tti.handler
@@ -68,7 +114,7 @@ functions:
           path: /api/tti
           method: post
           cors:
-            origin: '*'
+            origin: "*"
             headers: ${self:custom.allowedHeaders}
   get-tti:
     handler: api/tti/get-tti.handler
@@ -78,8 +124,18 @@ functions:
           path: /api/tti/{id}
           method: get
           cors:
-            origin: '*'
-            headers: ${self:custom.allowedHeaders}          
+            origin: "*"
+            headers: ${self:custom.allowedHeaders}
+  chat:
+    handler: api/chatbot/chat.handler
+    description: Post /api/chat/
+    events:
+      - http:
+          path: /api/chat
+          method: post
+          cors:
+            origin: "*"
+            headers: ${self:custom.allowedHeaders}
 
 resources:
   Resources:
@@ -88,7 +144,7 @@ resources:
       Properties:
         RoleName: ${self:service}-${self:custom.stage}-execution-role
         AssumeRolePolicyDocument:
-          Version: '2012-10-17'
+          Version: "2012-10-17"
           Statement:
             - Effect: Allow
               Principal:
@@ -96,21 +152,21 @@ resources:
                   - lambda.amazonaws.com
               Action:
                 - sts:AssumeRole
-        ManagedPolicyArns: 
+        ManagedPolicyArns:
           - arn:aws:iam::aws:policy/service-role/AWSLambdaRole
-          - arn:aws:iam::aws:policy/CloudWatchLambdaInsightsExecutionRolePolicy    
+          - arn:aws:iam::aws:policy/CloudWatchLambdaInsightsExecutionRolePolicy
           - arn:aws:iam::aws:policy/service-role/AWSLambdaBasicExecutionRole
-          - arn:aws:iam::aws:policy/AWSXrayWriteOnlyAccess   
-        Policies:      
+          - arn:aws:iam::aws:policy/AWSXrayWriteOnlyAccess
+        Policies:
           - PolicyName: ${self:service}-${self:custom.stage}-execution-policy
             PolicyDocument:
-              Version: '2012-10-17'
+              Version: "2012-10-17"
               Statement:
                 - Effect: "Allow"
                   Action:
                     - s3:*
                   Resource:
-                    - "arn:aws:s3:::${self:custom.bucket}/*" 
+                    - "arn:aws:s3:::${self:custom.bucket}/*"
                     - "*"
                 - Effect: "Allow"
                   Action:
@@ -123,11 +179,10 @@ resources:
         BucketName: ${self:custom.bucket}
         CorsConfiguration:
           CorsRules:
-            -
-              AllowedOrigins:
-                - '*'
+            - AllowedOrigins:
+                - "*"
               AllowedHeaders:
-                - '*'
+                - "*"
               AllowedMethods:
                 - GET
                 - PUT

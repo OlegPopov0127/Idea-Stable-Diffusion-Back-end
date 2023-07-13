@@ -3,7 +3,6 @@ const message = require("../config/Message");
 const statusCode = require("../config/statusCode.js");
 const errorCode = require("../config/errorCode");
 const utils = require("../utils/utils");
-const e = require("cors");
 
 module.exports.handler = async (event) => {
   try {
@@ -14,22 +13,15 @@ module.exports.handler = async (event) => {
       });
     }
     const reqData = JSON.parse(event.body);
-    let prompt = "";
-    let version = "";
-    if (reqData.model === "general") {
-      prompt = reqData.prompt + ", 4k photo";
-      version = process.env.TTL_AI_MODEL_VERSION;
-    } else {
-      prompt = reqData.prompt + ", modern disney style";
-      version = process.env.TTL_AI_DISNEY_MODEL_VERSION;
-    }
-    const inputData = {
-      prompt: prompt,
-    };
+    reqData.a_prompt =
+      "best quality, extremely detailed, photo from Pinterest, interior, cinematic photo, ultra-detailed, ultra-realistic, award-winning";
+    reqData.structure = "seg";
+
+    console.log(reqData);
 
     const body = {
-      version: version,
-      input: inputData,
+      version: process.env.CONTROLNET_AI_MODEL_VERSION,
+      input: reqData,
     };
 
     const headers = {
@@ -41,16 +33,14 @@ module.exports.handler = async (event) => {
     const response = await axios.post(process.env.BASE_REPLICATE_URL, body, {
       headers: headers,
     });
-
-    console.log(response.status);
-
     if (response.status !== 201) {
-      return utils.sendResponse(statusCode.GENERATION_ERROR, {
-        message: message.GENERATION_ERROR,
+      let error = response;
+      return utils.sendResponse(500, {
+        message: "Error occur ha",
+        data: error.detail,
       });
     }
-
-    return utils.sendResponse(statusCode.SUCCESS, { id: response.data.id });
+    return utils.sendResponse(200, response.data.id);
   } catch (err) {
     console.log("Error occured", err);
     return utils.sendResponse(500, { message: "Couldn't create this player!" });
